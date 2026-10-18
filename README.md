@@ -1,3 +1,87 @@
+GalleonTrack
+<p align="center">
+<img src="/web/icons/Icon-512.png" alt="GalleonTrack Logo" width="180" />
+</p>
+
+<h3 align="center">Navigate Your Tracking Journey</h3>
+
+<p align="center">
+A smarter way to track, manage, and stay connected with what matters.
+</p>
+
+<p align="center">
+<a href="https://github.com/galleonsoft/galleontrack">
+<img src="https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github" alt="GitHub Repository" />
+</a>
+<img src="https://img.shields.io/badge/Status-Active-2ea44f?style=for-the-badge" alt="Project Status" />
+<img src="https://img.shields.io/badge/Platform-Mobile%20%26%20Web-0A84FF?style=for-the-badge" alt="Platform" />
+</p>
+
+🌟 About GalleonTrack
+GalleonTrack is a tracking application developed by GalleonSoft. This repository contains the project source code and application assets.
+
+Explore the screenshots below to get a visual overview of the application.
+
+✨ Highlights
+📱 Application Interface — Explore the app's screens and user experience.
+🧭 Tracking Experience — A dedicated application for tracking-related workflows.
+🎨 Modern Presentation — An interface designed to make app interactions easy to follow.
+💻 Open Repository — Explore the source code and follow the project's development on GitHub.
+📸 Application Screenshots
+Take a look at GalleonTrack in action.
+
+🖼️ Screen 01
+<p align="center">
+<img src="arts/Screenshot_20261019_000126.png" alt="GalleonTrack Screenshot 1" width="280" />
+</p>
+
+🖼️ Screen 02
+<p align="center">
+<img src="arts/Screenshot_20261019_000138.png" alt="GalleonTrack Screenshot 2" width="280" />
+</p>
+
+🖼️ Screen 03
+<p align="center">
+<img src="arts/Screenshot_20261019_000148.png" alt="GalleonTrack Screenshot 3" width="280" />
+</p>
+
+🖼️ Screen 04
+<p align="center">
+<img src="arts/Screenshot_20261019_000203.png" alt="GalleonTrack Screenshot 4" width="280" />
+</p>
+
+🖼️ Screen 05
+<p align="center">
+<img src="arts/Screenshot_20261019_000225.png" alt="GalleonTrack Screenshot 5" width="280" />
+</p>
+
+🖼️ Screen 06
+<p align="center">
+<img src="arts/Screenshot_20261019_000246.png" alt="GalleonTrack Screenshot 6" width="280" />
+</p>
+
+🖼️ Screen 07
+<p align="center">
+<img src="arts/Screenshot_20261019_000250.png" alt="GalleonTrack Screenshot 7" width="280" />
+</p>
+
+🖼️ Screen 08
+<p align="center">
+<img src="arts/Screenshot_20261019_000308.png" alt="GalleonTrack Screenshot 8" width="280" />
+</p>
+
+🖼️ Screen 09
+<p align="center">
+<img src="arts/Screenshot_20261019_000345.png" alt="GalleonTrack Screenshot 9" width="280" />
+</p>
+
+🖼️ Screen 10
+<p align="center">
+<img src="arts/Screenshot_20261019_000405.png" alt="GalleonTrack Screenshot 10" width="280" />
+</p>
+
+
+
 # GalleonTrack
 
 Offline-first call tracking, lead management, analytics and location tracking / geofencing (Flutter + Hive CE). Android is primary; the location module also targets iOS.
