@@ -1,6 +1,6 @@
 # GalleonTrack
 
-Offline-first call tracking, lead management and analytics for Android (Flutter + Hive CE).
+Offline-first call tracking, lead management, analytics and location tracking / geofencing (Flutter + Hive CE). Android is primary; the location module also targets iOS.
 No account, no cloud, no background sync. The **only** network feature is the optional,
 user-confirmed `POST /api/v1/database-export`.
 
@@ -9,7 +9,7 @@ user-confirmed `POST /api/v1/database-export`.
 > on the first `flutter analyze`. The tests were written but not executed.
 
 ## Dependencies (kept minimal)
-`flutter_riverpod`, `hive_ce`, `path_provider`, `intl`, `archive`. Everything else (call log,
+`flutter_riverpod`, `hive_ce`, `path_provider`, `intl`, `archive`, `geolocator`, `flutter_local_notifications`. Everything else (call log,
 dialer, file sharing, runtime permission) is a small Kotlin MethodChannel in `MainActivity.kt`.
 Navigation uses the built-in Navigator (no go_router); records are stored as JSON strings in
 Hive CE boxes, so no code generation / adapters / build_runner is needed.
@@ -27,6 +27,17 @@ flutter build apk --release
 ```
 Requires Flutter ≥ 3.27 (uses `Color.withValues`), Dart ≥ 3.3.
 
+## Location & geofencing (More -> Location & geofences)
+- **Live:** current lat/lng, accuracy, speed, last-update time; start/stop sessions; configurable interval, minimum movement and accuracy threshold; background mode (Android foreground service + notification, iOS background-location indicator).
+- **Geofences:** circular zones (name, lat, lng, radius >= 20 m); create, edit, delete, enable/disable; per-fence entry/exit notification toggles; "use current location"; tap-to-place on the plot; local notifications on entry/exit.
+- **History:** GPS points (UTC), sessions, geofence events, route plot, distance, time inside each fence (today/week/month/custom), CSV export of points / events / time-inside, delete by age or everything. Geofences, events, sessions and points are included in local backups, and in the server export only if you select them.
+- **Detection rules:** fixes worse than the accuracy threshold (default 100 m) are ignored; a transition needs 2 consecutive agreeing fixes; exit needs distance > radius + 10 m. Event types: `enter`, `exit`, `suspend` (tracking stopped, or fence disabled/deleted while inside; closes the interval without claiming the user left).
+- **Time inside** = enter -> exit/suspend intervals clipped to the period; an interval still open is capped at "now" while tracking, otherwise at the last recorded fix.
+- **The "map" is an offline plot** (metric grid, scale bar, fences, route, position), not street tiles. Tile maps need network requests, which this app's no-network rule forbids.
+- **Limits:** tracking never auto-starts and is not resumed after the process is killed or the device reboots. Geofences are evaluated in-app from GPS fixes (not OS region monitoring), so detection only works while a session runs. Short intervals drain battery; indoor accuracy can be poor; OEM battery savers may stop background services.
+- **Extra setup:** merge `android/AndroidManifest.snippet.xml` (permissions + desugaring note) and `ios/Info.plist.snippet.xml`; add `ios/NativeBridge.swift.txt` to AppDelegate (iOS share sheet). iOS has no call-log API, so call import is Android-only.
+- Tests: `test/geo_test.dart`. Schema is now v2 (new boxes `geofences`, `location_points`, `geo_events`, `tracking_sessions`).
+
 ## Implemented
 - Onboarding/workspace (offline), admin profile, theme, optional call-log permission, labelled demo data (removable)
 - Hive CE database: 9 boxes, schema version + migration hook, startup error screen, health check, audit events
@@ -40,7 +51,7 @@ Requires Flutter ≥ 3.27 (uses `Color.withValues`), Dart ≥ 3.3.
 - Export to server (isolated `DatabaseExportApiService`), manifest, preview, confirmation dialog, progress, cancel, history
 
 ## NOT implemented (deliberately, to be honest about scope)
-Local notifications/reminders (in-app overdue states only), PDF and XLSX export, custom lead form builder,
+Follow-up reminder notifications (geofence notifications exist; follow-ups only show in-app overdue states), PDF and XLSX export, custom lead form builder,
 saved report templates, recording import/playback/management, PIN/biometric lock, backup encryption,
 scheduled daily reports, language packs, widget/integration tests, 50k-record performance run.
 Round-robin / role features apply to this installation only (no multi-device coordination).
