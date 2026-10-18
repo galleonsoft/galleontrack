@@ -17,6 +17,10 @@ const categoryLabels = {
   'calls': 'Call records',
   'follow_ups': 'Follow-ups',
   'excluded_numbers': 'Excluded numbers',
+  'geofences': 'Geofences',
+  'geo_events': 'Geofence events',
+  'tracking_sessions': 'Tracking sessions',
+  'location_points': 'Location history (GPS points - sensitive)',
 };
 
 class BuiltPackage {
@@ -54,6 +58,16 @@ Map<String, List<Map<String, dynamic>>> collect(Db db, Set<String> cats,
     ];
   }
   if (cats.contains('excluded_numbers')) out['excluded_numbers'] = [for (final e in db.excluded.values) e.toJson()];
+  if (cats.contains('geofences')) out['geofences'] = [for (final g in db.fences.values) g.toJson()];
+  if (cats.contains('geo_events')) {
+    out['geo_events'] = [for (final e in db.geoEvents.values.where((e) => range == null || range.contains(e.at))) e.toJson()];
+  }
+  if (cats.contains('tracking_sessions')) {
+    out['tracking_sessions'] = [for (final e in db.sessions.values.where((e) => range == null || range.contains(e.start))) e.toJson()];
+  }
+  if (cats.contains('location_points')) {
+    out['location_points'] = [for (final e in db.points.values.where((e) => range == null || range.contains(e.at))) e.toJson()];
+  }
   return out;
 }
 
@@ -137,7 +151,8 @@ ParsedPackage parsePackage(List<int> bytes) {
 
 typedef Staged = ({
   List<Employee> employees, List<Team> teams, List<Lead> leads, List<CallRecord> calls,
-  List<FollowUp> followUps, List<ExcludedNumber> excluded, Map<String, dynamic>? settings
+  List<FollowUp> followUps, List<ExcludedNumber> excluded, Map<String, dynamic>? settings,
+  List<GeoFence> fences, List<GeoEvent> geoEvents, List<TrackingSession> sessions, List<LocationPoint> points
 });
 
 /// Stage 1: decode everything into model objects. Throws before touching the DB.
@@ -154,6 +169,8 @@ Staged stage(ParsedPackage p) {
     leads: conv('leads', Lead.fromJson), calls: conv('calls', CallRecord.fromJson),
     followUps: conv('follow_ups', FollowUp.fromJson),
     excluded: conv('excluded_numbers', ExcludedNumber.fromJson),
+    fences: conv('geofences', GeoFence.fromJson), geoEvents: conv('geo_events', GeoEvent.fromJson),
+    sessions: conv('tracking_sessions', TrackingSession.fromJson), points: conv('location_points', LocationPoint.fromJson),
     settings: (p.data['settings']?.isNotEmpty ?? false) ? Map<String, dynamic>.from(p.data['settings']!.first as Map) : null,
   );
 }
@@ -168,6 +185,10 @@ Future<void> applyStaged(Db db, ParsedPackage p, Staged s, {required bool replac
     if (p.data.containsKey('employees')) await db.employees.clear();
     if (p.data.containsKey('teams')) await db.teams.clear();
     if (p.data.containsKey('excluded_numbers')) await db.excluded.clear();
+    if (p.data.containsKey('geofences')) await db.fences.clear();
+    if (p.data.containsKey('geo_events')) await db.geoEvents.clear();
+    if (p.data.containsKey('tracking_sessions')) await db.sessions.clear();
+    if (p.data.containsKey('location_points')) await db.points.clear();
   }
   await db.teams.putAll(s.teams);
   await db.employees.putAll(s.employees);
@@ -175,6 +196,10 @@ Future<void> applyStaged(Db db, ParsedPackage p, Staged s, {required bool replac
   await db.calls.putAll(s.calls);
   await db.followUps.putAll(s.followUps);
   await db.excluded.putAll(s.excluded);
+  await db.fences.putAll(s.fences);
+  await db.geoEvents.putAll(s.geoEvents);
+  await db.sessions.putAll(s.sessions);
+  await db.points.putAll(s.points);
   if (s.settings != null) {
     final keep = db.settings;
     final n = Settings.fromJson(s.settings!);

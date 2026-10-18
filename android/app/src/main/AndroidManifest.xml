@@ -3,6 +3,13 @@
     <uses-permission android:name="android.permission.READ_CALL_LOG" />
     <!-- INTERNET is required ONLY for the optional, user-initiated "Export to server" POST. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Location -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <!-- Geofence notifications (Android 13+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
 
     <application

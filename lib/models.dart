@@ -22,6 +22,8 @@ class Settings {
   List<String> statuses = List.of(defaultStatuses);
   List<String> disabledStatuses = [];
   int lastNativeMs = 0;
+  int locIntervalSec = 30, locDistanceM = 10, locMaxAccuracyM = 100, locRetentionDays = 0;
+  bool locBackground = true;
   DateTime? lastImport, lastBackup;
 
   List<String> get activeStatuses =>
@@ -48,7 +50,8 @@ class Settings {
         'retentionDays': retentionDays, 'rrIndex': rrIndex, 'maxActiveLeads': maxActiveLeads,
         'followUpHour': followUpHour, 'contactDeadlineDays': contactDeadlineDays,
         'workDays': workDays, 'holidays': holidays, 'statuses': statuses,
-        'disabledStatuses': disabledStatuses, 'lastNativeMs': lastNativeMs,
+        'disabledStatuses': disabledStatuses, 'lastNativeMs': lastNativeMs, 'locIntervalSec': locIntervalSec, 'locDistanceM': locDistanceM,
+        'locMaxAccuracyM': locMaxAccuracyM, 'locRetentionDays': locRetentionDays, 'locBackground': locBackground,
         'lastImport': sd(lastImport), 'lastBackup': sd(lastBackup),
       };
 
@@ -76,6 +79,11 @@ class Settings {
     s.statuses = List<String>.from(j['statuses'] ?? defaultStatuses);
     s.disabledStatuses = List<String>.from(j['disabledStatuses'] ?? []);
     s.lastNativeMs = j['lastNativeMs'] ?? 0;
+    s.locIntervalSec = j['locIntervalSec'] ?? 30;
+    s.locDistanceM = j['locDistanceM'] ?? 10;
+    s.locMaxAccuracyM = j['locMaxAccuracyM'] ?? 100;
+    s.locRetentionDays = j['locRetentionDays'] ?? 0;
+    s.locBackground = j['locBackground'] ?? true;
     s.lastImport = pd(j['lastImport']);
     s.lastBackup = pd(j['lastBackup']);
     return s;
@@ -302,5 +310,104 @@ class ExportHistory {
         id: j['id'], url: j['url'] ?? '', categories: List<String>.from(j['categories'] ?? []),
         counts: Map<String, int>.from(j['counts'] ?? {}), sizeBytes: j['sizeBytes'] ?? 0,
         status: j['status'] ?? '', error: j['error'] ?? '', at: pd(j['at']),
+      );
+}
+
+// ---------------------------------------------------------------- Location
+
+class GeoFence {
+  GeoFence({String? id, required this.name, required this.lat, required this.lng,
+      required this.radiusM, this.enabled = true, this.notifyEnter = true,
+      this.notifyExit = true, DateTime? createdAt, DateTime? updatedAt})
+      : id = id ?? newId(),
+        createdAt = createdAt ?? DateTime.now().toUtc(),
+        updatedAt = updatedAt ?? DateTime.now().toUtc();
+  final String id;
+  String name;
+  double lat, lng, radiusM;
+  bool enabled, notifyEnter, notifyExit;
+  DateTime createdAt, updatedAt;
+
+  static String? validate(String name, double? lat, double? lng, double? radius) {
+    if (name.trim().isEmpty) return 'Name is required';
+    if (lat == null || lat < -90 || lat > 90) return 'Latitude must be between -90 and 90';
+    if (lng == null || lng < -180 || lng > 180) return 'Longitude must be between -180 and 180';
+    if (radius == null || radius < 20 || radius > 100000) return 'Radius must be 20–100000 m';
+    return null;
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id, 'name': name, 'lat': lat, 'lng': lng, 'radiusM': radiusM, 'enabled': enabled,
+        'notifyEnter': notifyEnter, 'notifyExit': notifyExit,
+        'createdAt': sd(createdAt), 'updatedAt': sd(updatedAt),
+      };
+  factory GeoFence.fromJson(Map<String, dynamic> j) => GeoFence(
+        id: j['id'], name: j['name'], lat: (j['lat'] as num).toDouble(), lng: (j['lng'] as num).toDouble(),
+        radiusM: (j['radiusM'] as num).toDouble(), enabled: j['enabled'] ?? true,
+        notifyEnter: j['notifyEnter'] ?? true, notifyExit: j['notifyExit'] ?? true,
+        createdAt: pd(j['createdAt']), updatedAt: pd(j['updatedAt']),
+      );
+}
+
+class LocationPoint {
+  LocationPoint({String? id, this.sessionId, required this.at, required this.lat,
+      required this.lng, this.accuracy = 0, this.speed, this.altitude})
+      : id = id ?? newId();
+  final String id;
+  String? sessionId;
+  DateTime at;
+  double lat, lng, accuracy;
+  double? speed, altitude;
+  Map<String, dynamic> toJson() => {
+        'id': id, 'sessionId': sessionId, 'at': sd(at), 'lat': lat, 'lng': lng,
+        'accuracy': accuracy, 'speed': speed, 'altitude': altitude,
+      };
+  factory LocationPoint.fromJson(Map<String, dynamic> j) => LocationPoint(
+        id: j['id'], sessionId: j['sessionId'], at: pd(j['at'])!, lat: (j['lat'] as num).toDouble(),
+        lng: (j['lng'] as num).toDouble(), accuracy: (j['accuracy'] as num?)?.toDouble() ?? 0,
+        speed: (j['speed'] as num?)?.toDouble(), altitude: (j['altitude'] as num?)?.toDouble(),
+      );
+}
+
+/// type: enter | exit | suspend (tracking stopped / fence disabled or deleted while inside;
+/// closes the "inside" interval without claiming the user left).
+class GeoEvent {
+  GeoEvent({String? id, required this.fenceId, required this.fenceName, required this.type,
+      required this.at, this.lat, this.lng, this.accuracy, this.sessionId})
+      : id = id ?? newId();
+  final String id;
+  String fenceId, fenceName, type;
+  DateTime at;
+  double? lat, lng, accuracy;
+  String? sessionId;
+  Map<String, dynamic> toJson() => {
+        'id': id, 'fenceId': fenceId, 'fenceName': fenceName, 'type': type, 'at': sd(at),
+        'lat': lat, 'lng': lng, 'accuracy': accuracy, 'sessionId': sessionId,
+      };
+  factory GeoEvent.fromJson(Map<String, dynamic> j) => GeoEvent(
+        id: j['id'], fenceId: j['fenceId'], fenceName: j['fenceName'] ?? '', type: j['type'],
+        at: pd(j['at'])!, lat: (j['lat'] as num?)?.toDouble(), lng: (j['lng'] as num?)?.toDouble(),
+        accuracy: (j['accuracy'] as num?)?.toDouble(), sessionId: j['sessionId'],
+      );
+}
+
+class TrackingSession {
+  TrackingSession({String? id, this.employeeId, DateTime? start, this.end, this.intervalSec = 30,
+      this.distanceM = 10, this.background = true})
+      : id = id ?? newId(),
+        start = start ?? DateTime.now().toUtc();
+  final String id;
+  String? employeeId;
+  DateTime start;
+  DateTime? end;
+  int intervalSec, distanceM;
+  bool background;
+  Map<String, dynamic> toJson() => {
+        'id': id, 'employeeId': employeeId, 'start': sd(start), 'end': sd(end),
+        'intervalSec': intervalSec, 'distanceM': distanceM, 'background': background,
+      };
+  factory TrackingSession.fromJson(Map<String, dynamic> j) => TrackingSession(
+        id: j['id'], employeeId: j['employeeId'], start: pd(j['start']), end: pd(j['end']),
+        intervalSec: j['intervalSec'] ?? 30, distanceM: j['distanceM'] ?? 10, background: j['background'] ?? true,
       );
 }

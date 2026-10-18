@@ -81,7 +81,7 @@ class Collection<T> {
 
 class Db extends ChangeNotifier {
   Db._();
-  static const schemaVersion = 1;
+  static const schemaVersion = 2;
   late final String dir;
   late final Box<String> _settingsBox, _auditBox;
   late final Collection<Employee> employees;
@@ -91,6 +91,10 @@ class Db extends ChangeNotifier {
   late final Collection<FollowUp> followUps;
   late final Collection<ExcludedNumber> excluded;
   late final Collection<ExportHistory> exports;
+  late final Collection<GeoFence> fences;
+  late final Collection<LocationPoint> points;
+  late final Collection<GeoEvent> geoEvents;
+  late final Collection<TrackingSession> sessions;
   Settings settings = Settings();
   int corruptRecords = 0;
   int version = 0;
@@ -122,7 +126,16 @@ class Db extends ChangeNotifier {
         ExcludedNumber.fromJson, (e) => e.toJson(), (e) => e.id, Role.manager.rank);
     db.exports = Collection(db, 'export_history', await b('export_history'),
         ExportHistory.fromJson, (e) => e.toJson(), (e) => e.id, Role.readOnly.rank + 1);
-    for (final c in [db.employees, db.teams, db.leads, db.calls, db.followUps, db.excluded, db.exports]) {
+    db.fences = Collection(db, 'geofences', await b('geofences'), GeoFence.fromJson, (e) => e.toJson(),
+        (e) => e.id, Role.manager.rank);
+    db.points = Collection(db, 'location_points', await b('location_points'), LocationPoint.fromJson,
+        (e) => e.toJson(), (e) => e.id, Role.employee.rank);
+    db.geoEvents = Collection(db, 'geo_events', await b('geo_events'), GeoEvent.fromJson,
+        (e) => e.toJson(), (e) => e.id, Role.employee.rank);
+    db.sessions = Collection(db, 'tracking_sessions', await b('tracking_sessions'),
+        TrackingSession.fromJson, (e) => e.toJson(), (e) => e.id, Role.employee.rank);
+    for (final c in [db.employees, db.teams, db.leads, db.calls, db.followUps, db.excluded, db.exports,
+      db.fences, db.points, db.geoEvents, db.sessions]) {
       c.load();
     }
     return db;
@@ -136,6 +149,8 @@ class Db extends ChangeNotifier {
     while (v < schemaVersion) {
       switch (v) {
         case 0: // v1: initial layout, nothing to transform.
+          break;
+        case 1: // v2: adds location boxes (created empty on open); no data transform.
           break;
       }
       v++;
@@ -181,7 +196,7 @@ class Db extends ChangeNotifier {
     final leadIds = leads.values.map((e) => e.id).toSet();
     return {
       'employees': employees.length, 'teams': teams.length, 'leads': leads.length,
-      'calls': calls.length, 'followUps': followUps.length, 'excludedNumbers': excluded.length,
+      'calls': calls.length, 'followUps': followUps.length, 'excludedNumbers': excluded.length, 'geofences': fences.length, 'locationPoints': points.length,
       'corruptRecords': corruptRecords,
       'callsWithMissingLead': calls.values.where((c) => c.leadId != null && !leadIds.contains(c.leadId)).length,
       'callsWithMissingEmployee': calls.values.where((c) => c.employeeId != null && !empIds.contains(c.employeeId)).length,

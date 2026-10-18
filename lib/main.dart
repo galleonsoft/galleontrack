@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'db.dart';
+import 'services/notification_service.dart';
 import 'ui/app.dart';
 
 Future<void> main() async {
@@ -9,7 +10,14 @@ Future<void> main() async {
   try {
     final dir = (await getApplicationSupportDirectory()).path;
     final db = await Db.open(dir);
-    runApp(ProviderScope(overrides: [dbProvider.overrideWith((ref) => db)], child: const GalleonApp()));
+    final notif = NotificationService();
+    try {
+      await notif.init(); // local notifications only; failure must not block the app
+    } catch (_) {}
+    runApp(ProviderScope(
+      overrides: [dbProvider.overrideWith((ref) => db), notificationProvider.overrideWithValue(notif)],
+      child: const GalleonApp(),
+    ));
   } catch (e) {
     runApp(MaterialApp(
       home: Scaffold(

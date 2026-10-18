@@ -39,6 +39,8 @@ dependencies:
   path_provider: ^2.1.6
   intl: ^0.20.3
   archive: ^4.5.2
+  geolocator: ^13.0.2
+  flutter_local_notifications: ^22.3.2
 
 
 dev_dependencies:

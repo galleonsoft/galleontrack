@@ -1,0 +1,19 @@
+// Add inside AppDelegate.application(_:didFinishLaunchingWithOptions:), after GeneratedPluginRegistrant.register(with: self)
+// iOS has no call-log API: hasPermission/requestPermission report false and getCalls is unavailable (manual call entry still works).
+let controller = window?.rootViewController as! FlutterViewController
+let channel = FlutterMethodChannel(name: "galleontrack/native", binaryMessenger: controller.binaryMessenger)
+channel.setMethodCallHandler { call, result in
+  switch call.method {
+  case "hasPermission", "requestPermission": result(false)
+  case "shareFile":
+    let args = call.arguments as? [String: Any]
+    guard let path = args?["path"] as? String else { result(FlutterError(code: "ARGS", message: "path", details: nil)); return }
+    let vc = UIActivityViewController(activityItems: [URL(fileURLWithPath: path)], applicationActivities: nil)
+    controller.present(vc, animated: true); result(nil)
+  case "dial":
+    let n = ((call.arguments as? [String: Any])?["number"] as? String) ?? ""
+    if let u = URL(string: "tel://" + n.filter { "+0123456789".contains($0) }) { UIApplication.shared.open(u) }
+    result(nil)
+  default: result(FlutterMethodNotImplemented)
+  }
+}

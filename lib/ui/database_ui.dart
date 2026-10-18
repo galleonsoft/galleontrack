@@ -22,7 +22,7 @@ class DatabaseScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Database')),
       body: ListView(padding: const EdgeInsets.all(12), children: [
         Section('Status (Hive CE, schema v${Db.schemaVersion})', Column(children: [
-          for (final e in h.entries) ListTile(dense: true, contentPadding: EdgeInsets.zero, title: Text(e.key), trailing: Text('${e.value}', style: TextStyle(color: e.key != 'employees' && e.key != 'teams' && e.key != 'leads' && e.key != 'calls' && e.key != 'followUps' && e.key != 'excludedNumbers' && e.value > 0 ? Colors.red : null))),
+          for (final e in h.entries) ListTile(dense: true, contentPadding: EdgeInsets.zero, title: Text(e.key), trailing: Text('${e.value}', style: TextStyle(color: (e.key.startsWith('corrupt') || e.key.contains('Missing')) && e.value > 0 ? Colors.red : null))),
           Text('Last backup: ${fmtDt(db.settings.lastBackup)}'),
         ])),
         Section('Local backup (never uses the network)', Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -153,6 +153,8 @@ class _ExportState extends ConsumerState<ExportScreen> {
     final counts = {
       'settings': 1, 'employees': db.employees.length, 'teams': db.teams.length, 'leads': db.leads.length,
       'calls': db.calls.length, 'follow_ups': db.followUps.length, 'excluded_numbers': db.excluded.length,
+      'geofences': db.fences.length, 'geo_events': db.geoEvents.length, 'tracking_sessions': db.sessions.length,
+      'location_points': db.points.length,
     };
     return Scaffold(
       appBar: AppBar(title: const Text('Export to server')),

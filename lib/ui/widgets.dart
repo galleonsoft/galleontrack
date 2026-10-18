@@ -4,9 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../core.dart';
 import '../db.dart';
+import '../services/location_service.dart';
+import '../services/notification_service.dart';
 import '../services/ops.dart';
 
 final dbProvider = ChangeNotifierProvider<Db>((ref) => throw UnimplementedError('db not opened'));
+final notificationProvider = Provider<NotificationService>((ref) => throw UnimplementedError('notifications not initialised'));
+final locationProvider = ChangeNotifierProvider<LocationService>(
+    (ref) => LocationService(ref.read(dbProvider), ref.read(notificationProvider)));
 final opsProvider = Provider<Ops>((ref) => Ops(ref.watch(dbProvider)));
 
 String fmtDt(DateTime? d) => d == null ? '—' : DateFormat('d MMM yyyy, HH:mm').format(d.toLocal());

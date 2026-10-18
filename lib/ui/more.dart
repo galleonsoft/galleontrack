@@ -4,6 +4,7 @@ import '../core.dart';
 import '../models.dart';
 import '../services/analytics.dart';
 import 'database_ui.dart';
+import 'location_ui.dart';
 import 'reports_ui.dart';
 import 'settings_ui.dart';
 import 'widgets.dart';
@@ -14,6 +15,7 @@ class MoreScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     void go(Widget w) => Navigator.push(context, MaterialPageRoute(builder: (_) => w));
     final items = [
+      (Icons.location_on, 'Location & geofences', () => go(const LocationScreen())),
       (Icons.badge, 'Employees', () => go(const EmployeesScreen())),
       (Icons.groups, 'Teams', () => go(const TeamsScreen())),
       (Icons.visibility_off, 'Excluded numbers', () => go(const ExcludedScreen())),

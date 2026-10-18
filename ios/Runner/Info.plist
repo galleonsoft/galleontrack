@@ -66,5 +66,14 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+    <string>GalleonTrack records your position on this device to show routes and detect geofence entry/exit. Data is not uploaded unless you export it.</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>Used to keep recording your route and geofence events while the app is in the background.</string>
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>location</string>
+    </array>
+
 </dict>
 </plist>

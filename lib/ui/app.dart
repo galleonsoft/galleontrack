@@ -10,7 +10,7 @@ import 'leads.dart';
 import 'more.dart';
 import 'widgets.dart';
 
-export 'widgets.dart' show dbProvider;
+export 'widgets.dart' show dbProvider, notificationProvider;
 
 ThemeData _theme(Brightness b) {
   final cs = ColorScheme.fromSeed(seedColor: const Color(0xFF1E3A8A), brightness: b);
